@@ -1,0 +1,1532 @@
+
+###Tutoria 1: Ingeneria del dato###
+
+#Parte de salarios
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# Carga el archivo Excel
+datos_salarios <- read_excel("Salarios a Limpio.xlsx", col_names = TRUE)
+
+# Ver las primeras filas de datos
+head(datos_salarios)
+
+# Ver los nombres de las columnas
+colnames(datos_salarios)
+
+# Elimina la columna "No consta"
+datos_salarios <- select(datos_salarios, -`No consta`)
+
+# Ver los nombres de las columnas para confirmar que son correctos
+colnames(datos_salarios)
+
+# Valores medios para los rangos salariales
+Valores_medios <- c(350, 850, 1250, 1750, 2250, 2750, 3250)
+
+# Asigna valores medios a los rangos salariales y calcula la media salarial ponderada
+datos_salarios <- datos_salarios %>%
+  rowwise() %>%
+  mutate(Salario_medio = (sum(c_across(3:9) * Valores_medios) / sum(c_across(3:9)))) %>%
+  ungroup()
+
+media_salario_medio <- mean(datos_salarios$Salario_medio, na.rm = TRUE)
+
+# Filtrar los datos para excluir la categoría "Total"
+datos_salarios_filtrados <- datos_salarios %>%
+  filter(Estudios != "TOTAL")
+
+# Gráfico de la distribución de personas por rango salarial, excluyendo "Total"
+ggplot(datos_salarios_filtrados, aes(x = reorder(Estudios, -`Total han trabajado alguna vez`), y = `Total han trabajado alguna vez`)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(x = "Estudios", y = "Total de Personas", title = "Distribución de Personas por Rango Salarial") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Gráfico del total de personas por ámbito de estudio
+ggplot(datos_salarios_filtrados, aes(x = Estudios, y = Salario_medio)) +
+  geom_bar(stat = "identity", fill = "green") +
+  labs(x = "Estudios", y = "Salario Medio", title = "Salario Medio por Ámbito de Estudio") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# Histograma del salario medio
+ggplot(datos_salarios, aes(x = Salario_medio)) +
+  geom_histogram(binwidth = 250, fill = "orange", color = "black") +
+  labs(x = "Salario Medio", y = "Frecuencia", title = "Distribución del Salario Medio")
+
+
+
+#Parte de Acciones#
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+
+#Apple#
+# 1. Cargar los datos
+datos_apple <- read_csv("Apple (AAPL)csv.csv")
+
+# 2. Convertir los tipos de datos
+# Asegúrate de usar los nombres exactos de las columnas que salen en tu archivo.
+datos_apple <- datos_apple %>%
+  mutate(Date = as.Date(Date, format="%Y-%m-%d"),
+         `Adj Close` = as.numeric(`Adj Close`),
+         Volume = as.numeric(Volume))
+
+# 3. Calcular los rendimientos logarítmicos diarios
+datos_apple <- datos_apple %>%
+  arrange(Date) %>% # Asegúrate de que los datos estén ordenados por fecha
+  mutate(Log_Return = log(`Adj Close` / lag(`Adj Close`)))
+
+# 4. Visualización del precio ajustado de cierre
+ggplot(datos_apple, aes(x = Date, y = `Adj Close`)) +
+  geom_line(color = "blue") +
+  labs(title = "Apple Precio Accion (Adj Close) Historicamente", x = "Fecha", y = "Adj Close Price")
+
+# 5. Visualización de los rendimientos logarítmicos diarios
+ggplot(datos_apple, aes(x = Date, y = Log_Return)) +
+  geom_line(color = "red") +
+  labs(title = "Tendimientos Logarítmicos Diarios para Apple", x = "Fecha", y = "Rendimientos Logarítmicos Diarios")
+
+# Gráfico de densidad de los rendimientos logarítmicos
+ggplot(datos_apple, aes(x = Log_Return)) +
+  geom_density(fill="blue", alpha=0.5) +
+  labs(title = "Densidad de los rendimientos logarítmicos", x = "Rendimientos Logaritmos", y = "Densidad")
+
+# Gráfico de la función de distribución acumulativa (CDF)
+ggplot(datos_apple, aes(x = Log_Return)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Distribución Acumulativa Apple", x = "Rendimientos Logaritmos", y = "Probabilidad acumulada")
+
+
+#Microsoft#
+# 1. Cargar los datos
+datos_msft <- read_csv("Microsoft Corporation (MSFT).csv")
+
+# 2. Convertir los tipos de datos
+datos_msft <- datos_msft %>%
+  mutate(Date = as.Date(Date, format="%Y-%m-%d"),
+         `Adj Close` = as.numeric(`Adj Close`),
+         Volume = as.numeric(Volume))
+
+# 3. Calcular los rendimientos logarítmicos diarios
+datos_msft <- datos_msft %>%
+  arrange(Date) %>%
+  mutate(Log_Return = log(`Adj Close` / lag(`Adj Close`)))
+
+# 4. Visualización del precio ajustado de cierre
+ggplot(datos_msft, aes(x = Date, y = `Adj Close`)) +
+  geom_line(color = "blue") +
+  labs(title = "Microsoft Precio Accion (Adj Close) Historicamente", x = "Fecha", y = "Precio Ajustado al Cierre")
+
+# 5. Visualización de los rendimientos logarítmicos diarios
+ggplot(datos_msft, aes(x = Date, y = Log_Return)) +
+  geom_line(color = "red") +
+  labs(title = "Rendimientos Logarítmicos Diarios para Microsoft", x = "Fecha", y = "Rendimientos Logarítmicos Diarios")
+
+# Gráfico de densidad de los rendimientos logarítmicos
+ggplot(datos_msft, aes(x = Log_Return)) +
+  geom_density(fill="blue", alpha=0.5) +
+  labs(title = "Densidad de los rendimientos logarítmicos de Microsoft", x = "Rendimientos Logaritmos", y = "Densidad")
+
+# Gráfico de la función de distribución acumulativa (CDF)
+ggplot(datos_msft, aes(x = Log_Return)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Distribución Acumulativa de Microsoft", x = "Rendimientos Logaritmos", y = "Probabilidad acumulada")
+
+
+#Coca-Cola#
+# Carga los datos de Coca-Cola
+datos_ko <- read_csv("The Coca-Cola Company (KO).csv")
+
+# Convierte los tipos de datos
+datos_ko <- datos_ko %>%
+  mutate(Date = as.Date(Date, format="%Y-%m-%d"),
+         `Adj Close` = as.numeric(`Adj Close`),
+         Volume = as.numeric(Volume))
+
+# Eliminar filas con valores no finitos (Inf, -Inf) o NA en Log_Return
+datos_apple <- datos_apple %>%
+  filter(is.finite(Log_Return))
+
+# Calcula los rendimientos logarítmicos
+datos_ko <- datos_ko %>%
+  arrange(Date) %>%
+  mutate(Log_Return = log(`Adj Close` / lag(`Adj Close`)))
+
+# Gráfico de línea para el precio ajustado al cierre
+ggplot(datos_ko, aes(x = Date, y = `Adj Close`)) +
+  geom_line(color = "blue") +
+  labs(title = "Coca-Cola Precio Accion (Adj Close) Historicamente", x = "Fecha", y = "Precio Ajustado al Cierre")
+
+# Gráfico de línea para los rendimientos logarítmicos
+ggplot(datos_ko, aes(x = Date, y = Log_Return)) +
+  geom_line(color = "red") +
+  labs(title = "Rendimientos Logarítmicos Diarios para Coca-Cola", x = "Fecha", y = "Rendimientos Logarítmicos Diarios")
+
+# Gráfico de densidad para los rendimientos logarítmicos
+ggplot(datos_ko, aes(x = Log_Return)) +
+  geom_density(fill="blue", alpha=0.5) +
+  labs(title = "Densidad de los rendimientos logarítmicos de Coca-Cola", x = "Rendimientos Logaritmos", y = "Densidad")
+
+# Gráfico CDF para los rendimientos logarítmicos
+ggplot(datos_ko, aes(x = Log_Return)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Distribución Acumulativa de Coca-Cola", x = "Rendimientos Logaritmos", y = "Probabilidad acumulada")
+
+
+# Bank of America #
+# 1. Cargar los datos
+datos_bac <- read_csv("Bank of America Corporation (BAC).csv")
+
+# 2. Convertir los tipos de datos
+datos_bac <- datos_bac %>%
+  mutate(Date = as.Date(Date, format="%Y-%m-%d"),
+         `Adj Close` = as.numeric(`Adj Close`),
+         Volume = as.numeric(Volume))
+
+# 3. Calcular los rendimientos logarítmicos diarios
+datos_bac <- datos_bac %>%
+  arrange(Date) %>%
+  mutate(Log_Return = log(`Adj Close` / lag(`Adj Close`)))
+
+# 4. Visualización del precio ajustado de cierre
+ggplot(datos_bac, aes(x = Date, y = `Adj Close`)) +
+  geom_line(color = "blue") +
+  labs(title = "Bank of America Precio Acción (Adj Close) Históricamente", x = "Fecha", y = "Precio Ajustado al Cierre")
+
+# 5. Visualización de los rendimientos logarítmicos diarios
+ggplot(datos_bac, aes(x = Date, y = Log_Return)) +
+  geom_line(color = "red") +
+  labs(title = "Rendimientos Logarítmicos Diarios para Bank of America", x = "Fecha", y = "Rendimientos Logarítmicos Diarios")
+
+# Gráfico de densidad de los rendimientos logarítmicos
+ggplot(datos_bac, aes(x = Log_Return)) +
+  geom_density(fill="blue", alpha=0.5) +
+  labs(title = "Densidad de los rendimientos logarítmicos de Bank of America", x = "Rendimientos Logarítmicos", y = "Densidad")
+
+# Gráfico de la función de distribución acumulativa (CDF)
+ggplot(datos_bac, aes(x = Log_Return)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Distribución Acumulativa de Bank of America", x = "Rendimientos Logarítmicos", y = "Probabilidad Acumulada")
+
+
+# Walmart #
+# Cargar los datos de Walmart
+datos_wmt <- read_csv("Walmart Inc. (WMT).csv")
+
+# Convierte las columnas a los tipos adecuados
+datos_wmt <- datos_wmt %>%
+  mutate(Date = as.Date(Date, format="%Y-%m-%d"),
+         `Adj Close` = as.numeric(`Adj Close`),
+         Volume = as.numeric(Volume))
+
+# Calcula los rendimientos logarítmicos
+datos_wmt <- datos_wmt %>%
+  arrange(Date) %>%
+  mutate(Log_Return = log(`Adj Close` / lag(`Adj Close`)))
+
+# Gráfico de línea para el precio ajustado al cierre
+ggplot(datos_wmt, aes(x = Date, y = `Adj Close`)) +
+  geom_line(color = "blue") +
+  labs(title = "Walmart Precio Acción (Adj Close) Históricamente", x = "Fecha", y = "Precio Ajustado al Cierre")
+
+# Gráfico de línea para los rendimientos logarítmicos
+ggplot(datos_wmt, aes(x = Date, y = Log_Return)) +
+  geom_line(color = "red") +
+  labs(title = "Rendimientos Logarítmicos Diarios para Walmart", x = "Fecha", y = "Rendimientos Logarítmicos Diarios")
+
+# Gráfico de densidad para los rendimientos logarítmicos
+ggplot(datos_wmt, aes(x = Log_Return)) +
+  geom_density(fill="blue", alpha=0.5) +
+  labs(title = "Densidad de los rendimientos logarítmicos de Walmart", x = "Rendimientos Logarítmicos", y = "Densidad")
+
+# Gráfico CDF para los rendimientos logarítmicos
+ggplot(datos_wmt, aes(x = Log_Return)) +
+  stat_ecdf(geom = "step") +
+  labs(title = "Distribución Acumulativa de Walmart", x = "Rendimientos Logarítmicos", y = "Probabilidad Acumulada")
+
+
+
+
+
+
+
+
+
+
+
+### Tutoría 2: ¡Análisis de datos! ###
+
+## Modelo de Regresión Solo con Rango Diario ##
+
+# Nuevo apple
+
+# Paso 1: Preparación de los Datos
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Cargar los datos de las acciones de Apple
+apple_data <- read_csv("Apple (AAPL)csv.csv") %>%
+  mutate(
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    `Adj Close` = as.numeric(`Adj Close`),
+    High = as.numeric(High),
+    Low = as.numeric(Low),
+    Rango_Diario = High - Low,  # Calcular el rango de precios diarios
+    Cambio_Diario_Porcentaje = (`Adj Close` / lag(`Adj Close`) - 1) * 100
+  ) %>%
+  filter(!is.na(Cambio_Diario_Porcentaje))  # Filtrar los NA generados por la función lag
+
+# Paso 2: Modelado Estadístico
+
+# Implementar el modelo de regresión lineal usando solo Rango Diario
+modelo_lm_apple <- lm(Cambio_Diario_Porcentaje ~ Rango_Diario, data = apple_data)
+
+# Paso 3: Evaluación del Modelo
+
+# Resumen del modelo para obtener estadísticas
+summary(modelo_lm_apple)
+
+# Paso 4: Visualización
+
+# Gráfico de dispersión con línea de ajuste
+ggplot(apple_data, aes(x = Rango_Diario, y = Cambio_Diario_Porcentaje)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Cambio Diario Porcentual vs Rango Diario para Apple",
+       x = "Rango Diario de Precios",
+       y = "Cambio Diario Porcentual")
+
+# Paso 5: Diagnóstico del Modelo
+
+# Extraer y limpiar los residuos del modelo
+apple_data <- mutate(apple_data, residuos = resid(modelo_lm_apple))
+residuos_limpios <- na.omit(apple_data$residuos) %>% filter(is.finite(.))
+
+# Histograma de residuos
+ggplot(data = data.frame(residuos = residuos_limpios), aes(x = residuos)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black") +
+  labs(title = "Histograma de Residuos del Modelo de Regresión de Apple",
+       x = "Residuos",
+       y = "Frecuencia")
+
+# Pruebas adicionales y visualización de residuos
+library(car)
+library(nortest)
+library(lmtest)
+
+ad.test(residuos_limpios)
+bptest(modelo_lm_apple)
+qqPlot(modelo_lm_apple, main="Gráfico Q-Q de Residuos")
+plot(modelo_lm_apple$fitted.values, residuos_limpios, main = "Residuos vs Valores Ajustados")
+
+cor.test(apple_data$Rango_Diario, apple_data$Cambio_Diario_Porcentaje)
+
+# Calcular y mostrar el RMSE
+rmse_apple <- sqrt(mean(residuos_limpios^2))
+print(paste("RMSE del modelo para Apple:", rmse_apple))
+
+# Paso 6: Preparar la Predicción
+
+# Crear un nuevo dataframe con nuevos datos de rango diario
+nuevos_datos_apple <- data.frame(Rango_Diario = c(1, 5, 10))  # Asumiendo estos rangos como ejemplos
+
+# Predicciones con el nuevo modelo
+predicciones_lm_apple <- predict(modelo_lm_apple, newdata = nuevos_datos_apple)
+nuevos_datos_apple$Predicciones = predicciones_lm_apple
+
+# Visualización de las predicciones
+ggplot(nuevos_datos_apple, aes(x = Rango_Diario, y = Predicciones)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Predicciones de Cambio Diario Porcentual para Nuevos Rangos Diarios de Apple",
+       x = "Rango Diario de Precios",
+       y = "Predicción de Cambio Diario Porcentual")
+
+
+
+# Nuevo Microsoft 
+
+# Paso 1: Preparación de los Datos
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Cargar los datos de las acciones de Microsoft
+microsoft_data <- read_csv("Microsoft Corporation (MSFT).csv") %>%
+  mutate(
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    `Adj Close` = as.numeric(`Adj Close`),
+    High = as.numeric(High),
+    Low = as.numeric(Low),
+    Rango_Diario = High - Low,  # Calcular el rango de precios diarios
+    Cambio_Diario_Porcentaje = (`Adj Close` / lag(`Adj Close`) - 1) * 100
+  ) %>%
+  filter(!is.na(Cambio_Diario_Porcentaje))  # Filtrar los NA generados por la función lag
+
+# Paso 2: Modelado Estadístico
+
+# Implementar el modelo de regresión lineal usando solo Rango Diario
+modelo_lm_microsoft <- lm(Cambio_Diario_Porcentaje ~ Rango_Diario, data = microsoft_data)
+
+# Paso 3: Evaluación del Modelo
+
+# Resumen del modelo para obtener estadísticas
+summary(modelo_lm_microsoft)
+
+# Paso 4: Visualización
+
+# Gráfico de dispersión con línea de ajuste
+ggplot(microsoft_data, aes(x = Rango_Diario, y = Cambio_Diario_Porcentaje)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Cambio Diario Porcentual vs Rango Diario para Microsoft",
+       x = "Rango Diario de Precios",
+       y = "Cambio Diario Porcentual")
+
+# Paso 5: Diagnóstico del Modelo
+
+# Extraer y limpiar los residuos del modelo
+microsoft_data <- mutate(microsoft_data, residuos = resid(modelo_lm_microsoft))
+residuos_limpios <- na.omit(microsoft_data$residuos) %>% filter(is.finite(.))
+
+# Histograma de residuos
+ggplot(data = data.frame(residuos = residuos_limpios), aes(x = residuos)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black") +
+  labs(title = "Histograma de Residuos del Modelo de Regresión de Microsoft",
+       x = "Residuos",
+       y = "Frecuencia")
+
+# Pruebas adicionales y visualización de residuos
+library(car)
+library(nortest)
+library(lmtest)
+
+ad.test(residuos_limpios)
+bptest(modelo_lm_microsoft)
+qqPlot(modelo_lm_microsoft, main="Gráfico Q-Q de Residuos")
+plot(modelo_lm_microsoft$fitted.values, residuos_limpios, main = "Residuos vs Valores Ajustados")
+
+cor.test(microsoft_data$Rango_Diario, microsoft_data$Cambio_Diario_Porcentaje)
+
+# Calcular y mostrar el RMSE
+rmse_microsoft <- sqrt(mean(residuos_limpios^2))
+print(paste("RMSE del modelo para Microsoft:", rmse_microsoft))
+
+# Paso 6: Preparar la Predicción
+
+# Crear un nuevo dataframe con nuevos datos de rango diario
+nuevos_datos_microsoft <- data.frame(Rango_Diario = c(1, 5, 10))  # Asumiendo estos rangos como ejemplos
+
+# Predicciones con el nuevo modelo
+predicciones_lm_microsoft <- predict(modelo_lm_microsoft, newdata = nuevos_datos_microsoft)
+nuevos_datos_microsoft$Predicciones = predicciones_lm_microsoft
+
+# Visualización de las predicciones
+ggplot(nuevos_datos_microsoft, aes(x = Rango_Diario, y = Predicciones)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Predicciones de Cambio Diario Porcentual para Nuevos Rangos Diarios de Microsoft",
+       x = "Rango Diario de Precios",
+       y = "Predicción de Cambio Diario Porcentual")
+
+
+
+# Nuevo Coca-Cola 
+
+# Paso 1: Preparación de los Datos
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Cargar los datos de las acciones de Coca-Cola
+coca_cola_data <- read_csv("The Coca-Cola Company (KO).csv") %>%
+  mutate(
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    `Adj Close` = as.numeric(`Adj Close`),
+    High = as.numeric(High),
+    Low = as.numeric(Low),
+    Rango_Diario = High - Low,  # Calcular el rango de precios diarios
+    Cambio_Diario_Porcentaje = (`Adj Close` / lag(`Adj Close`) - 1) * 100
+  ) %>%
+  filter(!is.na(Cambio_Diario_Porcentaje))  # Filtrar los NA generados por la función lag
+
+# Paso 2: Modelado Estadístico
+
+# Implementar el modelo de regresión lineal usando solo Rango Diario
+modelo_lm_coca_cola <- lm(Cambio_Diario_Porcentaje ~ Rango_Diario, data = coca_cola_data)
+
+# Paso 3: Evaluación del Modelo
+
+# Resumen del modelo para obtener estadísticas
+summary(modelo_lm_coca_cola)
+
+# Paso 4: Visualización
+
+# Gráfico de dispersión con línea de ajuste
+ggplot(coca_cola_data, aes(x = Rango_Diario, y = Cambio_Diario_Porcentaje)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Cambio Diario Porcentual vs Rango Diario para Coca-Cola",
+       x = "Rango Diario de Precios",
+       y = "Cambio Diario Porcentual")
+
+# Paso 5: Diagnóstico del Modelo
+
+# Extraer y limpiar los residuos del modelo
+coca_cola_data <- mutate(coca_cola_data, residuos = resid(modelo_lm_coca_cola))
+residuos_limpios <- na.omit(coca_cola_data$residuos) %>% filter(is.finite(.))
+
+# Histograma de residuos
+ggplot(data = data.frame(residuos = residuos_limpios), aes(x = residuos)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black") +
+  labs(title = "Histograma de Residuos del Modelo de Regresión de Coca-Cola",
+       x = "Residuos",
+       y = "Frecuencia")
+
+# Pruebas adicionales y visualización de residuos
+library(car)
+library(nortest)
+library(lmtest)
+
+ad.test(residuos_limpios)
+bptest(modelo_lm_coca_cola)
+qqPlot(modelo_lm_coca_cola, main="Gráfico Q-Q de Residuos")
+plot(modelo_lm_coca_cola$fitted.values, residuos_limpios, main = "Residuos vs Valores Ajustados")
+
+cor.test(coca_cola_data$Rango_Diario, coca_cola_data$Cambio_Diario_Porcentaje)
+
+# Calcular y mostrar el RMSE
+rmse_coca_cola <- sqrt(mean(residuos_limpios^2))
+print(paste("RMSE del modelo para Coca-Cola:", rmse_coca_cola))
+
+# Paso 6: Preparar la Predicción
+
+# Crear un nuevo dataframe con nuevos datos de rango diario
+nuevos_datos_coca_cola <- data.frame(Rango_Diario = c(1, 5, 10))  # Asumiendo estos rangos como ejemplos
+
+# Predicciones con el nuevo modelo
+predicciones_lm_coca_cola <- predict(modelo_lm_coca_cola, newdata = nuevos_datos_coca_cola)
+nuevos_datos_coca_cola$Predicciones = predicciones_lm_coca_cola
+
+# Visualización de las predicciones
+ggplot(nuevos_datos_coca_cola, aes(x = Rango_Diario, y = Predicciones)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Predicciones de Cambio Diario Porcentual para Nuevos Rangos Diarios de Coca-Cola",
+       x = "Rango Diario de Precios",
+       y = "Predicción de Cambio Diario Porcentual")
+
+
+
+# Nuevo Bank of America
+
+# Paso 1: Preparación de los Datos
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Cargar los datos de las acciones de Bank of America
+bankofamerica_data <- read_csv("Bank of America Corporation (BAC).csv") %>%
+  mutate(
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    `Adj Close` = as.numeric(`Adj Close`),
+    High = as.numeric(High),
+    Low = as.numeric(Low),
+    Rango_Diario = High - Low,  # Calcular el rango de precios diarios
+    Cambio_Diario_Porcentaje = (`Adj Close` / lag(`Adj Close`) - 1) * 100
+  ) %>%
+  filter(!is.na(Cambio_Diario_Porcentaje))  # Filtrar los NA generados por la función lag
+
+# Paso 2: Modelado Estadístico
+
+# Implementar el modelo de regresión lineal usando solo Rango Diario
+modelo_lm_bankofamerica <- lm(Cambio_Diario_Porcentaje ~ Rango_Diario, data = bankofamerica_data)
+
+# Paso 3: Evaluación del Modelo
+
+# Resumen del modelo para obtener estadísticas
+summary(modelo_lm_bankofamerica)
+
+# Paso 4: Visualización
+
+# Gráfico de dispersión con línea de ajuste
+ggplot(bankofamerica_data, aes(x = Rango_Diario, y = Cambio_Diario_Porcentaje)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Cambio Diario Porcentual vs Rango Diario para Bank of America",
+       x = "Rango Diario de Precios",
+       y = "Cambio Diario Porcentual")
+
+# Paso 5: Diagnóstico del Modelo
+
+# Extraer y limpiar los residuos del modelo
+bankofamerica_data <- mutate(bankofamerica_data, residuos = resid(modelo_lm_bankofamerica))
+residuos_limpios <- na.omit(bankofamerica_data$residuos) %>% filter(is.finite(.))
+
+# Histograma de residuos
+ggplot(data = data.frame(residuos = residuos_limpios), aes(x = residuos)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black") +
+  labs(title = "Histograma de Residuos del Modelo de Regresión de Bank of America",
+       x = "Residuos",
+       y = "Frecuencia")
+
+# Pruebas adicionales y visualización de residuos
+library(car)
+library(nortest)
+library(lmtest)
+
+ad.test(residuos_limpios)
+bptest(modelo_lm_bankofamerica)
+qqPlot(modelo_lm_bankofamerica, main="Gráfico Q-Q de Residuos")
+plot(modelo_lm_bankofamerica$fitted.values, residuos_limpios, main = "Residuos vs Valores Ajustados")
+
+cor.test(bankofamerica_data$Rango_Diario, bankofamerica_data$Cambio_Diario_Porcentaje)
+
+# Calcular y mostrar el RMSE
+rmse_bankofamerica <- sqrt(mean(residuos_limpios^2))
+print(paste("RMSE del modelo para Bank of America:", rmse_bankofamerica))
+
+# Paso 6: Preparar la Predicción
+
+# Crear un nuevo dataframe con nuevos datos de rango diario
+nuevos_datos_bankofamerica <- data.frame(Rango_Diario = c(1, 5, 10))  # Asumiendo estos rangos como ejemplos
+
+# Predicciones con el nuevo modelo
+predicciones_lm_bankofamerica <- predict(modelo_lm_bankofamerica, newdata = nuevos_datos_bankofamerica)
+nuevos_datos_bankofamerica$Predicciones = predicciones_lm_bankofamerica
+
+# Visualización de las predicciones
+ggplot(nuevos_datos_bankofamerica, aes(x = Rango_Diario, y = Predicciones)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Predicciones de Cambio Diario Porcentual para Nuevos Rangos Diarios de Bank of America",
+       x = "Rango Diario de Precios",
+       y = "Predicción de Cambio Diario Porcentual")
+
+
+
+
+
+# Nuevo Walmart
+
+# Paso 1: Preparación de los Datos
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Cargar los datos de las acciones de Walmart
+walmart_data <- read_csv("Walmart Inc. (WMT).csv") %>%
+  mutate(
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    `Adj Close` = as.numeric(`Adj Close`),
+    High = as.numeric(High),
+    Low = as.numeric(Low),
+    Rango_Diario = High - Low,  # Calcular el rango de precios diarios
+    Cambio_Diario_Porcentaje = (`Adj Close` / lag(`Adj Close`) - 1) * 100
+  ) %>%
+  filter(!is.na(Cambio_Diario_Porcentaje))  # Filtrar los NA generados por la función lag
+
+# Paso 2: Modelado Estadístico
+
+# Implementar el modelo de regresión lineal usando solo Rango Diario
+modelo_lm_walmart <- lm(Cambio_Diario_Porcentaje ~ Rango_Diario, data = walmart_data)
+
+# Paso 3: Evaluación del Modelo
+
+# Resumen del modelo para obtener estadísticas
+summary(modelo_lm_walmart)
+
+# Paso 4: Visualización
+
+# Gráfico de dispersión con línea de ajuste
+ggplot(walmart_data, aes(x = Rango_Diario, y = Cambio_Diario_Porcentaje)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Cambio Diario Porcentual vs Rango Diario para Walmart",
+       x = "Rango Diario de Precios",
+       y = "Cambio Diario Porcentual")
+
+# Paso 5: Diagnóstico del Modelo
+
+# Extraer y limpiar los residuos del modelo
+walmart_data <- mutate(walmart_data, residuos = resid(modelo_lm_walmart))
+residuos_limpios <- na.omit(walmart_data$residuos) %>% filter(is.finite(.))
+
+# Histograma de residuos
+ggplot(data = data.frame(residuos = residuos_limpios), aes(x = residuos)) +
+  geom_histogram(binwidth = 0.1, fill = "blue", color = "black") +
+  labs(title = "Histograma de Residuos del Modelo de Regresión de Walmart",
+       x = "Residuos",
+       y = "Frecuencia")
+
+# Pruebas adicionales y visualización de residuos
+library(car)
+library(nortest)
+library(lmtest)
+
+ad.test(residuos_limpios)
+bptest(modelo_lm_walmart)
+qqPlot(modelo_lm_walmart, main="Gráfico Q-Q de Residuos")
+plot(modelo_lm_walmart$fitted.values, residuos_limpios, main = "Residuos vs Valores Ajustados")
+
+cor.test(walmart_data$Rango_Diario, walmart_data$Cambio_Diario_Porcentaje)
+
+# Calcular y mostrar el RMSE
+rmse_walmart <- sqrt(mean(residuos_limpios^2))
+print(paste("RMSE del modelo para Walmart:", rmse_walmart))
+
+# Paso 6: Preparar la Predicción
+
+# Crear un nuevo dataframe con nuevos datos de rango diario
+nuevos_datos_walmart <- data.frame(Rango_Diario = c(1, 5, 10))  # Asumiendo estos rangos como ejemplos
+
+# Predicciones con el nuevo modelo
+predicciones_lm_walmart <- predict(modelo_lm_walmart, newdata = nuevos_datos_walmart)
+nuevos_datos_walmart$Predicciones = predicciones_lm_walmart
+
+# Visualización de las predicciones
+ggplot(nuevos_datos_walmart, aes(x = Rango_Diario, y = Predicciones)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Predicciones de Cambio Diario Porcentual para Nuevos Rangos Diarios de Walmart",
+       x = "Rango Diario de Precios",
+       y = "Predicción de Cambio Diario Porcentual")
+
+
+
+####  Portafolio LM
+
+# Cargar las bibliotecas necesarias
+library(PortfolioAnalytics)
+library(xts)
+library(doParallel)
+library(DEoptim)
+
+# Suponer que predicciones_lm_apple, predicciones_lm_microsoft, predicciones_lm_coca_cola,
+# predicciones_lm_bank_of_america y predicciones_lm_walmart son los vectores de predicciones
+# y todos tienen la misma longitud y están alineados por fecha.
+
+# Crear un dataframe con todas las predicciones
+predicciones <- data.frame(
+  Apple = predicciones_lm_apple,
+  Microsoft = predicciones_lm_microsoft,
+  CocaCola = predicciones_lm_coca_cola,
+  BankOfAmerica = predicciones_lm_bank_of_america,
+  Walmart = predicciones_lm_walmart
+)
+
+# Asegurarse de que todos los datos son numéricos
+predicciones[] <- lapply(predicciones, as.numeric)
+
+# Crear fechas ficticias si no tienes una columna de fecha
+fechas <- seq(as.Date("2022-01-01"), length.out = nrow(predicciones), by = "day")
+predicciones_xts <- xts(predicciones, order.by = fechas)
+
+# Crear objeto de portafolio
+portfolio <- portfolio.spec(assets = colnames(predicciones_xts))
+
+# Añadir una restricción de box para la suma de las inversiones con más flexibilidad
+portfolio <- add.constraint(portfolio, type = "box", label="investment box", min_sum = 0.95, max_sum = 1.05)
+
+# Añadir restricción de solo posiciones largas
+portfolio <- add.constraint(portfolio, type = "long_only")
+
+# Añadir objetivo de retorno específico y control de riesgo
+portfolio <- add.objective(portfolio, type = "return", name = "mean", target = 0.20)
+# Configurar el objetivo de riesgo para alcanzar un 10% de desviación estándar
+portfolio <- add.objective(portfolio, type = "risk", name = "sd", target = 0.10)
+
+# Configurar y registrar un backend paralelo para mejorar la eficiencia
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
+
+# Establecer el método de optimización a 'DEoptim'
+optimize_method = "DEoptim"
+
+# Optimizar el portafolio para tratar de alcanzar el 20% de retorno con un límite de riesgo de 10%
+optimal_portfolio <- optimize.portfolio(R = predicciones_xts, portfolio = portfolio, optimize_method = optimize_method, trace = TRUE)
+
+# Detener el cluster después de la optimización
+stopCluster(cl)
+
+# Ver los resultados de la optimización
+print(optimal_portfolio)
+
+
+
+
+
+
+#### Portafolio LM con Objetivo de Retorno del 10%
+
+# Cargar las bibliotecas necesarias
+library(PortfolioAnalytics)
+library(xts)
+library(doParallel)
+library(DEoptim)
+
+# Crear un dataframe con todas las predicciones
+predicciones <- data.frame(
+  Apple = predicciones_lm_apple,
+  Microsoft = predicciones_lm_microsoft,
+  CocaCola = predicciones_lm_coca_cola,
+  BankOfAmerica = predicciones_lm_bank_of_america,
+  Walmart = predicciones_lm_walmart
+)
+
+# Asegurarse de que todos los datos son numéricos
+predicciones[] <- lapply(predicciones, as.numeric)
+
+# Crear fechas ficticias si no tienes una columna de fecha
+fechas <- seq(as.Date("2022-01-01"), length.out = nrow(predicciones), by = "day")
+predicciones_xts <- xts(predicciones, order.by = fechas)
+
+# Crear objeto de portafolio
+portfolio <- portfolio.spec(assets = colnames(predicciones_xts))
+
+# Añadir una restricción de box para la suma de las inversiones con más flexibilidad
+portfolio <- add.constraint(portfolio, type = "box", label="investment box", min_sum = 0.99, max_sum = 1.01)
+
+# Añadir restricción de solo posiciones largas
+portfolio <- add.constraint(portfolio, type = "long_only")
+
+# Añadir objetivo de retorno específico y control de riesgo
+portfolio <- add.objective(portfolio, type = "return", name = "mean", target = 0.10)  # 10% objetivo de retorno
+portfolio <- add.objective(portfolio, type = "risk", name = "sd")
+
+# Configurar y registrar un backend paralelo para mejorar la eficiencia
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
+
+# Establecer el método de optimización a 'DEoptim'
+optimize_method = "DEoptim"
+
+# Optimizar el portafolio para tratar de alcanzar el 10% de retorno con la gestión del riesgo adecuada
+optimal_portfolio <- optimize.portfolio(R = predicciones_xts, portfolio = portfolio, optimize_method = optimize_method, trace = TRUE)
+
+# Detener el cluster después de la optimización
+stopCluster(cl)
+
+# Ver los resultados de la optimización
+print(optimal_portfolio)
+
+
+
+#### Portafolio LM con Objetivo de Riesgo del 10%
+
+# Cargar las bibliotecas necesarias
+library(PortfolioAnalytics)
+library(xts)
+library(doParallel)
+library(DEoptim)
+
+# Crear un dataframe con todas las predicciones
+predicciones <- data.frame(
+  Apple = predicciones_lm_apple,
+  Microsoft = predicciones_lm_microsoft,
+  CocaCola = predicciones_lm_coca_cola,
+  BankOfAmerica = predicciones_lm_bank_of_america,
+  Walmart = predicciones_lm_walmart
+)
+
+# Asegurarse de que todos los datos son numéricos
+predicciones[] <- lapply(predicciones, as.numeric)
+
+# Crear fechas ficticias si no tienes una columna de fecha
+fechas <- seq(as.Date("2022-01-01"), length.out = nrow(predicciones), by = "day")
+predicciones_xts <- xts(predicciones, order.by = fechas)
+
+# Crear objeto de portafolio
+portfolio <- portfolio.spec(assets = colnames(predicciones_xts))
+
+# Añadir una restricción de box para la suma de las inversiones con más flexibilidad
+portfolio <- add.constraint(portfolio, type = "box", label="investment box", min_sum = 0.99, max_sum = 1.01)
+
+# Añadir restricción de solo posiciones largas
+portfolio <- add.constraint(portfolio, type = "long_only")
+
+# Añadir objetivo de retorno específico
+portfolio <- add.objective(portfolio, type = "return", name = "mean")
+
+# Establecer el objetivo de riesgo para alcanzar un 10% de desviación estándar anualizada
+portfolio <- add.objective(portfolio, type = "risk", name = "sd", target = 0.10 / sqrt(252))
+
+# Configurar y registrar un backend paralelo para mejorar la eficiencia
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
+
+# Establecer el método de optimización a 'DEoptim'
+optimize_method = "DEoptim"
+
+# Optimizar el portafolio para tratar de alcanzar el 10% de retorno con un límite de riesgo de 10%
+optimal_portfolio <- optimize.portfolio(R = predicciones_xts, portfolio = portfolio, optimize_method = optimize_method, trace = TRUE)
+
+# Detener el cluster después de la optimización
+stopCluster(cl)
+
+# Ver los resultados de la optimización
+print(optimal_portfolio)
+
+
+
+
+
+#### Portafolio LM con Objetivo de maximo beneficio
+
+library(PortfolioAnalytics)
+library(xts)
+library(doParallel)
+library(DEoptim)
+
+# Crear un dataframe con todas las predicciones
+predicciones <- data.frame(
+  Apple = predicciones_lm_apple,
+  Microsoft = predicciones_lm_microsoft,
+  CocaCola = predicciones_lm_coca_cola,
+  BankOfAmerica = predicciones_lm_bank_of_america,
+  Walmart = predicciones_lm_walmart
+)
+
+# Convertir predicciones en xts para manejar fechas
+fechas <- seq(as.Date("2022-01-01"), length.out = nrow(predicciones), by = "day")
+predicciones_xts <- xts(predicciones, order.by = fechas)
+
+# Crear objeto de portafolio
+portfolio <- portfolio.spec(assets = colnames(predicciones_xts))
+
+# Añadir restricciones para la inversión
+portfolio <- add.constraint(portfolio, type = "box", label = "investment box", min_sum = 0.99, max_sum = 1.01)
+portfolio <- add.constraint(portfolio, type = "long_only")
+
+# Añadir objetivo para maximizar el retorno
+portfolio <- add.objective(portfolio, type = "return", name = "mean")
+
+# Establecer un entorno paralelo para optimizar más rápido
+numCores <- detectCores() - 1
+cl <- makeCluster(numCores)
+registerDoParallel(cl)
+
+# Establecer el método de optimización a 'DEoptim' para optimización diferencial
+optimize_method = "DEoptim"
+
+# Optimizar el portafolio para maximizar el retorno
+optimal_portfolio <- optimize.portfolio(R = predicciones_xts, portfolio = portfolio, optimize_method = optimize_method, trace = TRUE)
+
+# Detener el cluster después de la optimización
+stopCluster(cl)
+
+# Ver los resultados de la optimización
+print(optimal_portfolio)
+
+
+
+################################## Arima ##################################
+
+############## Apple ##############
+# Paso 1: Preparamos y revisamos los datos 
+
+# Paquetes necesarios
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tseries)
+library(forecast)
+
+# Incorporamos los datos
+apple_datos <- read_csv("Apple (AAPL)csv.csv", col_types = cols(Date = col_date(format = "%Y-%m-%d"), `Adj Close` = col_double()))
+
+# Ordenamos datos por fecha y comprobamos
+apple_datos <- arrange(apple_datos, Date)
+print(head(apple_datos))
+
+# Visualizamos serie temporal de los precios ajustados
+ggplot(apple_datos, aes(x = Date, y = `Adj Close`)) +
+  geom_line() +
+  labs(title = "Serie Temporal del Precio Ajustado de Cierre de Apple", x = "Fecha", y = "Precio Ajustado de Cierre")
+
+# Paso 2: Estacionariedad
+
+# Realizamos prueba de Dickey-Fuller Aumentada (ADF)
+apple_adf_test <- adf.test(apple_datos$`Adj Close`, alternative = "stationary")
+print(apple_adf_test)
+
+# Paso 3: Diferenciamos y verificamos la estacionalidad 
+
+# Diferenciamos la serie temporal
+apple_datos_diff <- diff(apple_datos$`Adj Close`, differences = 1)
+apple_datos_diff <- na.omit(apple_datos_diff)  # Eliminar valores NA que resultan de la diferenciación
+
+# Repetir prueba ADF en la serie diferenciada
+apple_adf_test_diff <- adf.test(apple_datos_diff, alternative = "stationary")
+print(apple_adf_test_diff)
+
+# Paso 4: Modelado ARIMA
+
+# Ajustar modelo ARIMA automáticamente
+if (exists("apple_datos_diff")) {
+  apple_arima_model <- auto.arima(apple_data_diff, stepwise = TRUE, approximation = FALSE, trace = TRUE)
+} else {
+  apple_arima_model <- auto.arima(apple_datos$`Adj Close`)
+}
+
+summary(apple_arima_model)
+
+# Diagnóstico de residuos
+checkresiduals(apple_arima_model)
+
+# Paso 5: Ajustamos Modelo ARIMA pero con más términos MA
+
+# Modelo Arima con más términos MA
+apple_arima_mejorado <- auto.arima(apple_datos_diff, d = 1, start.p = 0, start.q = 0, max.p = 5, max.q = 5, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(apple_arima_mejorado)
+checkresiduals(apple_arima_mejorado)
+
+# Hacemos una transformación logarítmica y ajustamos el modelo ARIMA
+apple_datos_log <- log(apple_datos$`Adj Close`)
+apple_datos_log_diff <- diff(apple_datos_log, differences = 1)
+apple_datos_log_diff <- na.omit(apple_datos_log_diff)
+apple_log_arima_model <- auto.arima(apple_datos_log_diff, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(apple_log_arima_model)
+checkresiduals(apple_log_arima_model)
+
+# Prediccion
+
+# Predicción a futuro por un mes
+apple_forecast <- forecast(apple_arima_model, h = 22)  # Pronosticar 22 días hábiles adelante
+
+# Hay que ver que las predicciones y los datos esten en la misma escala
+if (exists("apple_datos_log")) {
+  forecast_values <- exp(apple_forecast$mean)
+  forecast_lower <- exp(apple_forecast$lower[,2])
+  forecast_upper <- exp(apple_forecast$upper[,2])
+  fitted_values <- exp(fitted(apple_arima_model))
+} else {
+  forecast_values <- apple_forecast$mean
+  forecast_lower <- apple_forecast$lower[,2]
+  forecast_upper <- apple_forecast$upper[,2]
+  fitted_values <- fitted(apple_arima_model)
+}
+
+# Visualizamos la prediccion
+ggplot() +
+  geom_line(data = as.data.frame(forecast_values), aes(x = time(forecast_values), y = forecast_values), color = "blue") +
+  geom_ribbon(aes(x = time(forecast_values), ymin = forecast_lower, ymax = forecast_upper), alpha = 0.2, fill = "blue") +
+  geom_line(data = as.data.frame(fitted_values), aes(x = time(fitted_values), y = fitted_values), color = "red") +
+  labs(title = "Pronóstico Futuro del Precio de Cierre Ajustado de Apple para un Año de Días Hábiles", x = "Fecha", y = "Precio Cierre Ajustado")
+
+
+
+
+
+
+############## Microsoft ##############
+# Paso 1: Preparamos y revisamos los datos 
+
+# Paquetes necesarios
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tseries)
+library(forecast)
+
+# Incorporamos los datos
+microsoft_datos <- read_csv("Microsoft Corporation (MSFT).csv", col_types = cols(Date = col_date(format = "%Y-%m-%d"), `Adj Close` = col_double()))
+
+# Ordenamos datos por fecha y comprobamos
+microsoft_datos <- arrange(microsoft_datos, Date)
+print(head(microsoft_datos))
+
+# Visualizamos serie temporal de los precios ajustados
+ggplot(microsoft_datos, aes(x = Date, y = `Adj Close`)) +
+  geom_line() +
+  labs(title = "Serie Temporal del Precio Ajustado de Cierre de Microsoft", x = "Fecha", y = "Precio Ajustado de Cierre")
+
+# Paso 2: Estacionariedad
+
+# Realizamos prueba de Dickey-Fuller Aumentada (ADF)
+microsoft_adf_test <- adf.test(microsoft_datos$`Adj Close`, alternative = "stationary")
+print(microsoft_adf_test)
+
+# Paso 3: Diferenciamos y verificamos la estacionalidad 
+
+# Diferenciamos la serie temporal
+microsoft_datos_diff <- diff(microsoft_datos$`Adj Close`, differences = 1)
+microsoft_datos_diff <- na.omit(microsoft_datos_diff)  # Eliminar valores NA que resultan de la diferenciación
+
+# Repetir prueba ADF en la serie diferenciada
+microsoft_adf_test_diff <- adf.test(microsoft_datos_diff, alternative = "stationary")
+print(microsoft_adf_test_diff)
+
+# Paso 4: Modelado ARIMA
+
+# Ajustar modelo ARIMA automáticamente
+microsoft_arima_model <- auto.arima(microsoft_datos_diff, stepwise = TRUE, approximation = FALSE, trace = TRUE)
+summary(microsoft_arima_model)
+
+# Diagnóstico de residuos
+checkresiduals(microsoft_arima_model)
+
+# Paso 5: Ajustamos Modelo ARIMA pero con más términos MA
+
+# Modelo Arima con más términos MA
+microsoft_arima_mejorado <- auto.arima(microsoft_datos_diff, d = 1, start.p = 0, start.q = 0, max.p = 5, max.q = 5, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(microsoft_arima_mejorado)
+checkresiduals(microsoft_arima_mejorado)
+
+# Hacemos una transformación logarítmica y ajustamos el modelo ARIMA
+microsoft_datos_log <- log(microsoft_datos$`Adj Close`)
+microsoft_datos_log_diff <- diff(microsoft_datos_log, differences = 1)
+microsoft_datos_log_diff <- na.omit(microsoft_datos_log_diff)
+microsoft_log_arima_model <- auto.arima(microsoft_datos_log_diff, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(microsoft_log_arima_model)
+checkresiduals(microsoft_log_arima_model)
+
+# Predicción
+
+# Predicción a futuro por un mes
+microsoft_forecast <- forecast(microsoft_arima_model, h = 22)  # Pronosticar 22 días hábiles adelante
+
+# Hay que ver que las predicciones y los datos esten en la misma escala
+if (exists("microsoft_datos_log")) {
+  forecast_values <- exp(microsoft_forecast$mean)
+  forecast_lower <- exp(microsoft_forecast$lower[,2])
+  forecast_upper <- exp(microsoft_forecast$upper[,2])
+  fitted_values <- exp(fitted(microsoft_arima_model))
+} else {
+  forecast_values <- microsoft_forecast$mean
+  forecast_lower <- microsoft_forecast$lower[,2]
+  forecast_upper <- microsoft_forecast$upper[,2]
+  fitted_values <- fitted(microsoft_arima_model)
+}
+
+# Visualizamos la prediccion
+ggplot() +
+  geom_line(data = as.data.frame(forecast_values), aes(x = time(forecast_values), y = forecast_values), color = "blue") +
+  geom_ribbon(aes(x = time(forecast_values), ymin = forecast_lower, ymax = forecast_upper), alpha = 0.2, fill = "blue") +
+  geom_line(data = as.data.frame(fitted_values), aes(x = time(fitted_values), y = fitted_values), color = "red") +
+  labs(title = "Pronóstico Futuro del Precio de Cierre Ajustado de Microsoft para un Año de Días Hábiles", x = "Fecha", y = "Precio Cierre Ajustado")
+
+
+
+
+
+
+############## Coca-Cola ##############
+# Paso 1: Preparación y Exploración de Datos
+
+# Cargar paquetes necesarios
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tseries)
+library(forecast)
+
+# Cargar datos
+cocacola_datos <- read_csv("The Coca-Cola Company (KO).csv", col_types = cols(Date = col_date(format = "%Y-%m-%d"), `Adj Close` = col_double()))
+
+# Ordenar datos por fecha y revisar los primeros registros
+cocacola_datos <- arrange(cocacola_datos, Date)
+print(head(cocacola_datos))
+
+# Visualizar serie temporal de precios ajustados
+ggplot(cocacola_datos, aes(x = Date, y = `Adj Close`)) +
+  geom_line() +
+  labs(title = "Serie Temporal del Precio Ajustado de Cierre de Coca-Cola", x = "Fecha", y = "Precio Ajustado de Cierre")
+
+# Paso 2: Estacionariedad
+
+# Realizar prueba de Dickey-Fuller Aumentada (ADF)
+cocacola_adf_test <- adf.test(cocacola_datos$`Adj Close`, alternative = "stationary")
+print(cocacola_adf_test)
+
+# Paso 3: Diferenciación y Verificación de Estacionariedad
+
+# Diferenciar la serie temporal
+cocacola_datos_diff <- diff(cocacola_datos$`Adj Close`, differences = 1)
+cocacola_datos_diff <- na.omit(cocacola_datos_diff)  # Eliminar valores NA que resultan de la diferenciación
+
+# Repetir prueba ADF en la serie diferenciada
+cocacola_adf_test_diff <- adf.test(cocacola_datos_diff, alternative = "stationary")
+print(cocacola_adf_test_diff)
+
+# Paso 4: Modelado ARIMA
+
+# Ajustar modelo ARIMA automáticamente
+cocacola_arima_model <- auto.arima(cocacola_datos_diff, stepwise = TRUE, approximation = FALSE, trace = TRUE)
+summary(cocacola_arima_model)
+
+# Diagnóstico de residuos
+checkresiduals(cocacola_arima_model)
+
+# Paso 5: Ajustamos Modelo ARIMA con más términos MA
+
+# Modelo Arima con más términos MA
+cocacola_arima_mejorado <- auto.arima(cocacola_datos_diff, d = 1, start.p = 0, start.q = 0, max.p = 5, max.q = 5, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(cocacola_arima_mejorado)
+checkresiduals(cocacola_arima_mejorado)
+
+# Hacemos una transformación logarítmica y ajustamos el modelo ARIMA
+cocacola_datos_log <- log(cocacola_datos$`Adj Close`)
+cocacola_datos_log_diff <- diff(cocacola_datos_log, differences = 1)
+cocacola_datos_log_diff <- na.omit(cocacola_datos_log_diff)
+cocacola_log_arima_model <- auto.arima(cocacola_datos_log_diff, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(cocacola_log_arima_model)
+checkresiduals(cocacola_log_arima_model)
+
+# Predicción
+
+# Predicción a futuro por un mes
+cocacola_forecast <- forecast(cocacola_arima_model, h = 22)  # Pronosticar 22 días hábiles adelante
+
+# Ver que las predicciones y los datos estén en la misma escala
+forecast_values <- cocacola_forecast$mean
+forecast_lower <- cocacola_forecast$lower[,2]
+forecast_upper <- cocacola_forecast$upper[,2]
+fitted_values <- fitted(cocacola_arima_model)
+
+# Visualizamos la prediccion
+ggplot() +
+  geom_line(data = as.data.frame(forecast_values), aes(x = time(forecast_values), y = forecast_values), color = "blue") +
+  geom_ribbon(aes(x = time(forecast_values), ymin = forecast_lower, ymax = forecast_upper), alpha = 0.2, fill = "blue") +
+  geom_line(data = as.data.frame(fitted_values), aes(x = time(fitted_values), y = fitted_values), color = "red") +
+  labs(title = "Pronóstico Futuro del Precio de Cierre Ajustado de Coca-Cola para un Año de Días Hábiles", x = "Fecha", y = "Precio Cierre Ajustado")
+
+
+
+
+
+
+############## Bank of America ##############
+# Paso 1: Preparación y Exploración de Datos
+
+# Cargar paquetes necesarios
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tseries)
+library(forecast)
+
+# Cargar datos
+bankofamerica_datos <- read_csv("Bank of America Corporation (BAC).csv", col_types = cols(Date = col_date(format = "%Y-%m-%d"), `Adj Close` = col_double()))
+
+# Ordenar datos por fecha y revisar los primeros registros
+bankofamerica_datos <- arrange(bankofamerica_datos, Date)
+print(head(bankofamerica_datos))
+
+# Visualizar serie temporal de precios ajustados
+ggplot(bankofamerica_datos, aes(x = Date, y = `Adj Close`)) +
+  geom_line() +
+  labs(title = "Serie Temporal del Precio Ajustado de Cierre de Bank of America", x = "Fecha", y = "Precio Ajustado de Cierre")
+
+# Paso 2: Estacionariedad
+
+# Realizar prueba de Dickey-Fuller Aumentada (ADF)
+bankofamerica_adf_test <- adf.test(bankofamerica_datos$`Adj Close`, alternative = "stationary")
+print(bankofamerica_adf_test)
+
+# Paso 3: Diferenciación y Verificación de Estacionariedad
+
+# Diferenciar la serie temporal
+bankofamerica_datos_diff <- diff(bankofamerica_datos$`Adj Close`, differences = 1)
+bankofamerica_datos_diff <- na.omit(bankofamerica_datos_diff)  # Eliminar valores NA que resultan de la diferenciación
+
+# Repetir prueba ADF en la serie diferenciada
+bankofamerica_adf_test_diff <- adf.test(bankofamerica_datos_diff, alternative = "stationary")
+print(bankofamerica_adf_test_diff)
+
+# Paso 4: Modelado ARIMA
+
+# Ajustar modelo ARIMA automáticamente
+bankofamerica_arima_model <- auto.arima(bankofamerica_datos_diff, stepwise = TRUE, approximation = FALSE, trace = TRUE)
+summary(bankofamerica_arima_model)
+
+# Diagnóstico de residuos
+checkresiduals(bankofamerica_arima_model)
+
+# Paso 5: Ajustamos Modelo ARIMA con más términos MA
+
+# Modelo Arima con más términos MA
+bankofamerica_arima_mejorado <- auto.arima(bankofamerica_datos_diff, d = 1, start.p = 0, start.q = 0, max.p = 5, max.q = 5, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(bankofamerica_arima_mejorado)
+checkresiduals(bankofamerica_arima_mejorado)
+
+# Hacemos una transformación logarítmica y ajustamos el modelo ARIMA
+bankofamerica_datos_log <- log(bankofamerica_datos$`Adj Close`)
+bankofamerica_datos_log_diff <- diff(bankofamerica_datos_log, differences = 1)
+bankofamerica_datos_log_diff <- na.omit(bankofamerica_datos_log_diff)
+bankofamerica_log_arima_model <- auto.arima(bankofamerica_datos_log_diff, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(bankofamerica_log_arima_model)
+checkresiduals(bankofamerica_log_arima_model)
+
+# Predicción
+
+# Predicción a futuro por un mes
+bankofamerica_forecast <- forecast(bankofamerica_arima_model, h = 22)  # Pronosticar 22 días hábiles adelante
+
+# Hay que ver que las predicciones y los datos esten en la misma escala
+forecast_values <- bankofamerica_forecast$mean
+forecast_lower <- bankofamerica_forecast$lower[,2]
+forecast_upper <- bankofamerica_forecast$upper[,2]
+fitted_values <- fitted(bankofamerica_arima_model)
+
+# Visualizamos la prediccion
+ggplot() +
+  geom_line(data = as.data.frame(forecast_values), aes(x = time(forecast_values), y = forecast_values), color = "blue") +
+  geom_ribbon(aes(x = time(forecast_values), ymin = forecast_lower, ymax = forecast_upper), alpha = 0.2, fill = "blue") +
+  geom_line(data = as.data.frame(fitted_values), aes(x = time(fitted_values), y = fitted_values), color = "red") +
+  labs(title = "Pronóstico Futuro del Precio de Cierre Ajustado de Bank of America para un Año de Días Hábiles", x = "Fecha", y = "Precio Cierre Ajustado")
+
+
+
+
+
+
+############## Walmart ##############
+# Paso 1: Preparamos y revisamos los datos 
+
+# Paquetes necesarios
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tseries)
+library(forecast)
+
+# Incorporamos los datos
+walmart_datos <- read_csv("Walmart Inc. (WMT).csv", col_types = cols(Date = col_date(format = "%Y-%m-%d"), `Adj Close` = col_double()))
+
+# Ordenamos datos por fecha y comprobamos
+walmart_datos <- arrange(walmart_datos, Date)
+print(head(walmart_datos))
+
+# Visualizamos serie temporal de los precios ajustados
+ggplot(walmart_datos, aes(x = Date, y = `Adj Close`)) +
+  geom_line() +
+  labs(title = "Serie Temporal del Precio Ajustado de Cierre de Walmart", x = "Fecha", y = "Precio Ajustado de Cierre")
+
+# Paso 2: Estacionariedad
+
+# Realizamos prueba de Dickey-Fuller Aumentada (ADF)
+walmart_adf_test <- adf.test(walmart_datos$`Adj Close`, alternative = "stationary")
+print(walmart_adf_test)
+
+# Paso 3: Diferenciamos y verificamos la estacionalidad 
+
+# Diferenciamos la serie temporal
+walmart_datos_diff <- diff(walmart_datos$`Adj Close`, differences = 1)
+walmart_datos_diff <- na.omit(walmart_datos_diff)  # Eliminar valores NA que resultan de la diferenciación
+
+# Repetir prueba ADF en la serie diferenciada
+walmart_adf_test_diff <- adf.test(walmart_datos_diff, alternative = "stationary")
+print(walmart_adf_test_diff)
+
+# Paso 4: Modelado ARIMA
+
+# Ajustar modelo ARIMA automáticamente
+walmart_arima_model <- auto.arima(walmart_datos_diff, stepwise = TRUE, approximation = FALSE, trace = TRUE)
+
+summary(walmart_arima_model)
+
+# Diagnóstico de residuos
+checkresiduals(walmart_arima_model)
+
+# Paso 5: Ajustamos Modelo ARIMA pero con más términos MA
+
+# Modelo Arima con más términos MA
+walmart_arima_mejorado <- auto.arima(walmart_datos_diff, d = 1, start.p = 0, start.q = 0, max.p = 5, max.q = 5, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(walmart_arima_mejorado)
+checkresiduals(walmart_arima_mejorado)
+
+# Hacemos una transformación logarítmica y ajustamos el modelo ARIMA
+walmart_datos_log <- log(walmart_datos$`Adj Close`)
+walmart_datos_log_diff <- diff(walmart_datos_log, differences = 1)
+walmart_datos_log_diff <- na.omit(walmart_datos_log_diff)
+walmart_log_arima_model <- auto.arima(walmart_datos_log_diff, stepwise = FALSE, approximation = FALSE, trace = TRUE)
+summary(walmart_log_arima_model)
+checkresiduals(walmart_log_arima_model)
+
+# Prediccion
+
+# Predicción a futuro por un mes
+walmart_forecast <- forecast(walmart_arima_model, h = 22)  # Pronosticar 22 días hábiles adelante
+
+# Hay que ver que las predicciones y los datos esten en la misma escala
+forecast_values <- walmart_forecast$mean
+forecast_lower <- walmart_forecast$lower[,2]
+forecast_upper <- walmart_forecast$upper[,2]
+fitted_values <- fitted(walmart_arima_model)
+
+# Visualizamos la prediccion
+ggplot() +
+  geom_line(data = as.data.frame(forecast_values), aes(x = time(forecast_values), y = forecast_values), color = "blue") +
+  geom_ribbon(aes(x = time(forecast_values), ymin = forecast_lower, ymax = forecast_upper), alpha = 0.2, fill = "blue") +
+  geom_line(data = as.data.frame(fitted_values), aes(x = time(fitted_values), y = fitted_values), color = "red") +
+  labs(title = "Pronóstico Futuro del Precio de Cierre Ajustado de Walmart para un Año de Días Hábiles", x = "Fecha", y = "Precio Cierre Ajustado")
+
+
+
+
+
+
+
+
+########### Portafolio Modelo Arima ###########
+
+# Paso 1: Prepamos los datos
+
+library(xts)
+library(PortfolioAnalytics)
+
+# Supongamos que estos son los rendimientos pronosticados para 22 días hacia adelante
+# Para simplificar, aquí utilizo números aleatorios
+set.seed(123)
+predicciones_apple <- rnorm(22, mean = 0.0003, sd = 0.01)
+predicciones_microsoft <- rnorm(22, mean = 0.0005, sd = 0.01)
+predicciones_cocacola <- rnorm(22, mean = 0.0002, sd = 0.01)
+predicciones_bankofamerica <- rnorm(22, mean = 0.0004, sd = 0.01)
+predicciones_walmart <- rnorm(22, mean = 0.0001, sd = 0.01)
+
+# Crear un objeto xts con estas predicciones
+dates <- seq.Date(from = Sys.Date(), by = "days", length.out = 22)
+predicciones <- xts(cbind(predicciones_apple, predicciones_microsoft, predicciones_cocacola, predicciones_bankofamerica, predicciones_walmart), order.by = dates)
+
+# Nombres de las columnas como nombres de las acciones
+colnames(predicciones) <- c("Apple", "Microsoft", "CocaCola", "BankOfAmerica", "Walmart")
+
+
+# Paso 2: Vamos a crear el porfolio y optimizamos
+
+# Crear un objeto de especificación de portafolio
+portfolio <- portfolio.spec(assets = colnames(predicciones))
+
+# Añadir restricciones: inversión total debe ser 100% (1.0)
+portfolio <- add.constraint(portfolio, type = "full_investment")
+
+# Añadir restricción de que solo se pueden tomar posiciones largas
+portfolio <- add.constraint(portfolio, type = "long_only")
+
+# Añadir objetivo: maximizar el retorno esperado del portafolio
+portfolio <- add.objective(portfolio, type = "return", name = "mean")
+
+# Añadir objetivo: minimizar el riesgo del portafolio
+portfolio <- add.objective(portfolio, type = "risk", name = "sd")
+
+# Optimizar el portafolio utilizando una simulación de Monte Carlo
+optimal_portfolio <- optimize.portfolio(R = predicciones, portfolio = portfolio, optimize_method = "random", trace = TRUE)
+
+# Imprimir los resultados de la optimización
+print(optimal_portfolio)
+
+
+
+
+### Porfolio para riesgo 10% y 400 $ ###
+
+# Cargar bibliotecas necesarias
+library(PortfolioAnalytics)
+library(ROI)
+library(ROI.plugin.quadprog)
+library(xts)
+library(ggplot2)
+
+# Suponemos que 'predicciones' ya está cargado y es un objeto xts sin valores NA
+# Comprobar y limpiar los datos de predicciones
+predicciones[is.na(predicciones)] <- 0
+
+# Crear un objeto de especificación de portafolio
+portfolio2 <- portfolio.spec(assets = colnames(predicciones))
+portfolio2 <- add.constraint(portfolio2, type = "full_investment")
+portfolio2 <- add.constraint(portfolio2, type = "long_only")
+portfolio2 <- add.objective(portfolio2, type = "return", name = "mean")
+portfolio2 <- add.objective(portfolio2, type = "risk", name = "sd", target = 0.1 / sqrt(252) * sqrt(22))
+
+# Intentar una optimización usando el método de simulación de Monte Carlo
+optimal_portfolio2 <- optimize.portfolio(R = predicciones, portfolio = portfolio2, optimize_method = "DEoptim", trace = TRUE)
+
+# Imprimir los resultados de la optimización
+print(optimal_portfolio2)
+
+# Extraer y calcular los montos de inversión según los pesos óptimos
+if (!is.null(optimal_portfolio2)) {
+  weights2 <- extractWeights(optimal_portfolio2)
+  investment_amounts2 <- weights2 * 400
+  print(investment_amounts2)
+  
+  # Calcular los retornos esperados del portafolio
+  expected_portfolio_return <- sum(predicciones * weights2)
+  portfolio_gain_loss <- 400 * (1 + expected_portfolio_return) - 400
+  
+  # Imprimir las ganancias/perdidas del portafolio
+  print(paste("Ganancia/Pérdida del portafolio: ", round(portfolio_gain_loss, 2), " euros"))
+  
+  # Visualización de la distribución esperada del retorno del portafolio
+  simulated_returns <- rnorm(10000, mean = expected_portfolio_return, sd = calculate_portfolio_sd(predicciones, weights2))  # Función hipotética para calcular SD
+  ggplot(data = data.frame(Retornos = simulated_returns), aes(x = Retornos)) +
+    geom_histogram(bins = 50, fill = "blue", color = "black") +
+    labs(title = "Distribución Simulada de Retornos del Portafolio", x = "Retornos", y = "Frecuencia")
+} else {
+  print("No se pudo encontrar una solución óptima con los datos y configuraciones actuales.")
+}
+
+
+
+### Porfolio para riesgo 30% y 400 € ###
+
+# Cargar bibliotecas necesarias
+library(PortfolioAnalytics)
+library(ROI)
+library(ROI.plugin.quadprog)
+library(xts)
+library(ggplot2)
+
+# Suponemos que 'predicciones' ya está cargado y es un objeto xts sin valores NA
+# Comprobar y limpiar los datos de predicciones
+predicciones[is.na(predicciones)] <- 0
+
+# Crear un objeto de especificación de portafolio
+portfolio3 <- portfolio.spec(assets = colnames(predicciones))
+portfolio3 <- add.constraint(portfolio3, type = "full_investment")
+portfolio3 <- add.constraint(portfolio3, type = "long_only")
+portfolio3 <- add.objective(portfolio3, type = "return", name = "mean")
+portfolio3 <- add.objective(portfolio3, type = "risk", name = "sd", target = 0.3 / sqrt(252) * sqrt(22))
+
+# Intentar una optimización usando el método de optimización DEoptim
+optimal_portfolio3 <- optimize.portfolio(R = predicciones, portfolio = portfolio3, optimize_method = "DEoptim", trace = TRUE)
+
+# Imprimir los resultados de la optimización
+print(optimal_portfolio3)
+
+# Extraer y calcular los montos de inversión según los pesos óptimos
+if (!is.null(optimal_portfolio3)) {
+  weights3 <- extractWeights(optimal_portfolio3)
+  investment_amounts3 <- weights3 * 400
+  print(investment_amounts3)
+  
+  # Calcular los retornos esperados del portafolio
+  expected_portfolio_return <- sum(predicciones * weights3)
+  portfolio_gain_loss <- 400 * (1 + expected_portfolio_return) - 400
+  
+  # Imprimir las ganancias/perdidas del portafolio
+  print(paste("Ganancia/Pérdida del portafolio: ", round(portfolio_gain_loss, 2), " Euros"))
+  
+  # Visualización de la distribución esperada del retorno del portafolio
+  simulated_returns <- rnorm(10000, mean = expected_portfolio_return, sd = calculate_portfolio_sd(predicciones, weights3))  # Función hipotética para calcular SD
+  ggplot(data = data.frame(Retornos = simulated_returns), aes(x = Retornos)) +
+    geom_histogram(bins = 50, fill = "blue", color = "black") +
+    labs(title = "Distribución Simulada de Retornos del Portafolio", x = "Retornos", y = "Frecuencia")
+} else {
+  print("No se pudo encontrar una solución óptima con los datos y configuraciones actuales.")
+}
+
+
